@@ -1,5 +1,6 @@
 const axios = require('axios')
 const cheerio = require('cheerio')
+const { parse } = require('path')
 const querystring = require('querystring')
 
 async function fecthData (url) {
@@ -32,10 +33,14 @@ module.exports = async (req, res) => {
 
   var hotelsCardsClass = '.sr_item.sr_item_new.sr_item_default.sr_property_block.sr_card_no_hover.sr_item_no_dates'
 
+  var score = null
+  var localizationScore = null 
+
   $(hotelsCardsClass).each((index, element) => {
 
     const localName = $(element).find('span.sr-hotel__name').text()
     const localScore = $(element).attr('data-score')
+    const localizationScoreStr = $(element).find('span.review-score-badge').text()
 
     // standardizing the local names
     let lowerLocalName = localName.toLowerCase()
@@ -44,18 +49,18 @@ module.exports = async (req, res) => {
     if (lowerLocalName.includes(lowerReqName)) {
       foundScore = true
       score = parseStringToFloat(localScore)
+
+      if (localizationScore !== '') 
+        localizationScore = parseStringToFloat(localizationScoreStr)
+
     }
 
   })
 
-  if (foundScore) {
-    return res.status(200).json({
-      score: score
-    })
-  }
-
   return res.status(200).json({
-    score: 0
+    score,
+    localizationScore
   })
+
 
 }
