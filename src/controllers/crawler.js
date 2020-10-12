@@ -18,6 +18,8 @@ function parseStringToFloat (string) {
 module.exports = async (req, res) => {
 
   const { name, city } = req.body
+
+  if (!name || !city) return res.status(400).send('missing arguments')
   
   // query params
   const ss = `${name} ${city}`
