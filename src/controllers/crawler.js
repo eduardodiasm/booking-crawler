@@ -1,66 +1,18 @@
-const axios = require('axios')
-const cheerio = require('cheerio')
-const { parse } = require('path')
-const querystring = require('querystring')
-
-async function fecthData (url) {
-
-  const { data } = await axios.get(url)
-  return data
-
-}
-
-function parseStringToFloat (string) {
-  const dottedString = string.replace(',', '.')
-  const decimal = parseFloat(dottedString)
-  return decimal
-}
+const BookingService = require('../services/booking')
 
 module.exports = async (req, res) => {
 
-  const { name, city } = req.body
+  const name = req.body.name.toLowerCase()
+  const city = req.body.city
 
-  if (!name || !city) return res.status(400).send('missing arguments')
-  
-  // query params
-  const ss = `${name} ${city}`
-  const query = querystring.encode({ ss })
-  
-  const url = `https://www.booking.com/searchresults.pt-br.html?${query}`
-  const responseBody = await fecthData(url) 
-  
-  const $ = cheerio.load(responseBody)
+  const bookingScore = await BookingService.getScore(name, city)
 
-  var hotelsCardsClass = '.sr_item.sr_item_new.sr_item_default.sr_property_block.sr_card_no_hover.sr_item_no_dates'
-
-  var score = null
-  var localizationScore = null 
-
-  $(hotelsCardsClass).each((index, element) => {
-
-    const localName = $(element).find('span.sr-hotel__name').text()
-    const localScore = $(element).attr('data-score')
-    const localizationScoreStr = $(element).find('span.review-score-badge').text()
-
-    // standardizing the local names
-    let lowerLocalName = localName.toLowerCase()
-    let lowerReqName = name.toLowerCase()
-
-    if (lowerLocalName.includes(lowerReqName)) {
-      foundScore = true
-      score = parseStringToFloat(localScore)
-
-      if (localizationScore !== '') 
-        localizationScore = parseStringToFloat(localizationScoreStr)
-
-    }
-
+  if (!bookingScore) {
+    return res.status(404).json({ message: 'local not found' })
+  }
+ 
+  return res.json({
+    score: bookingScore
   })
-
-  return res.status(200).json({
-    score,
-    localizationScore
-  })
-
 
 }
