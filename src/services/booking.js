@@ -22,28 +22,35 @@ class BookingService {
     const responseBody = await fetchData(url) 
     
     const $ = cheerio.load(responseBody)
-    const localsEl = '.sr_item.sr_item_new.sr_item_default.sr_property_block.sr_card_no_hover.sr_item_no_dates'
+    const localsElements = '.sr_item.sr_item_new.sr_item_default.sr_property_block.sr_card_no_hover.sr_item_no_dates'
 
-    var generalScore = null
-    var locationScore = null
+    const localScores = {
+      generalScore: 0,
+      locationScore: 0
+    }
+    
+    var foundLocal = false
 
-    $(localsEl).each((index, element) => {
+    $(localsElements).each((index, element) => {
 
       const localName = $(element).find('span.sr-hotel__name').text().toLowerCase()
       const generalScoreEl = $(element).attr('data-score')
-      var locationScore = $(element).find('span.review-score-badge').text()
+      const locationScoreEl = $(element).find('span.review-score-badge').text()
 
       if (isTheSameLocal(localName, name)) {
-        generalScore = parseStringToFloat(generalScoreEl)
-        if (locationScore !== '') {
-          locationScore = parseStringToFloat(locationScore)
+        foundLocal = true
+        localScores.generalScore = parseStringToFloat(generalScoreEl)
+        if (locationScoreEl) {
+          localScores.locationScore = parseStringToFloat(locationScoreEl)
         }
       }
 
     })
 
-    const score = (generalScore * 0.8) + (locationScore * 0.2)
-    return score
+    if (!foundLocal) return null
+
+    const finalScore = (localScores.generalScore * 0.9) + (localScores.locationScore * 0.1)
+    return finalScore
 
   }
 
