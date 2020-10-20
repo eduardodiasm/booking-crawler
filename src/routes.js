@@ -1,7 +1,7 @@
 const router = require('express').Router()
 
-const crawlerController = require('./controllers/crawler')
+const scoreController = require('./controllers/score')
 
-router.post('/', crawlerController)
+router.post('/', scoreController)
 
 module.exports = router
